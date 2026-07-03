@@ -341,8 +341,26 @@
     input.type = input.type === "password" ? "text" : "password";
   }
 
+  // ── URL prefill (email → rabbit-hole bridge) ───────────────────────────────
+  // Contract: ?q=<URL-encoded topic> pre-fills the topic box. Never auto-starts.
+  const MAX_PREFILL_LEN = 500;
+
+  function prefillTopicFromUrl() {
+    try {
+      // Grab the raw (still-encoded) q value so we decode exactly once —
+      // the builder side encodes with encodeURIComponent.
+      const match = location.search.match(/[?&]q=([^&]*)/);
+      if (!match || !match[1]) return;
+      const topic = decodeURIComponent(match[1]).trim().slice(0, MAX_PREFILL_LEN);
+      if (!topic) return;
+      document.getElementById("topic-input").value = topic;
+      updateStartBtn();
+    } catch(e) {}
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     loadSavedKey();
+    prefillTopicFromUrl();
 
     document.getElementById("api-key-input").addEventListener("input", function() {
       const val = this.value.trim();
